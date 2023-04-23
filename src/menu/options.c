@@ -904,6 +904,11 @@ MenuData* create_options_menu(void) {
 		bind_addvalue(b, "3.0");
 		bind_addvalue(b, "4.0");
 
+	add_menu_entry(m, "Player regime", do_nothing,
+		b = bind_option(CONFIG_PLAYER_REGIME,   bind_common_int_get, bind_common_int_set)
+	);	bind_addvalue(b, "1P");
+		bind_addvalue(b, "2P");
+
 	add_menu_entry(m, "Shoot by default", do_nothing,
 		b = bind_option(CONFIG_SHOT_INVERTED,   bind_common_onoff_get, bind_common_onoff_set)
 	);	bind_onoff(b);
