@@ -267,6 +267,23 @@ static void stage_draw_destroy_framebuffers(void) {
 }
 
 void stage_draw_pre_init(void) {
+
+	// bool fullscreen = video_is_fullscreen();
+	
+	// 	VideoMode m = video_get_mode(0, fullscreen);
+	// 	config_set_int(CONFIG_VID_WIDTH, m.width * 2);
+	// 	config_set_int(CONFIG_VID_HEIGHT, m.height);
+
+		video_set_mode(
+			config_get_int(CONFIG_VID_DISPLAY),
+			2 * config_get_int(CONFIG_VID_WIDTH),
+			config_get_int(CONFIG_VID_HEIGHT),
+			config_get_int(CONFIG_FULLSCREEN),
+			config_get_int(CONFIG_VID_RESIZABLE)
+		);
+	
+
+
 	stagedraw.mfb_group = fbmgr_group_create();
 
 	preload_resources(RES_POSTPROCESS, RESF_OPTIONAL,
