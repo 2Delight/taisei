@@ -56,7 +56,7 @@ enum {
 	RESY = 600,
 #endif
 
-	VIEWPORT_X = 40,
+	VIEWPORT_X = 840,
 	VIEWPORT_Y = 20,
 	VIEWPORT_W = 480,
 	VIEWPORT_H = 560,

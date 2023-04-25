@@ -299,10 +299,12 @@ void stage_draw_pre_init(void) {
 	preload_resources(RES_TEXTURE, RESF_PERMANENT,
 		"powersurge_flow",
 		"titletransition",
+		"hud_long",
 		"hud",
 	NULL);
 
 	preload_resources(RES_MODEL, RESF_PERMANENT,
+		"hud_long",
 		"hud",
 	NULL);
 
@@ -984,6 +986,14 @@ void stage_draw_viewport(void) {
 	r_mat_mv_translate(0.5, 0.5, 0);
 	r_draw_quad();
 	r_mat_mv_pop();
+
+	r_mat_mv_push();
+	r_mat_mv_scale(1/facw, 1/fach, 1);
+	r_mat_mv_translate(roundf(facw * VIEWPORT_X - 440), roundf(fach * VIEWPORT_Y), 0);
+	r_mat_mv_scale(roundf(scale * VIEWPORT_W), roundf(scale * VIEWPORT_H), 1);
+	r_mat_mv_translate(0.5, 0.5, 0);
+	r_draw_quad();
+	r_mat_mv_pop();
 }
 
 void stage_draw_scene(StageInfo *stage) {
@@ -1030,8 +1040,8 @@ void stage_draw_scene(StageInfo *stage) {
 	end_viewport_shake();
 
 	// prepare to apply postprocessing
-	fbpair_swap(foreground);
-	r_blend(BLEND_NONE);
+	// fbpair_swap(foreground);
+	// r_blend(BLEND_NONE);
 
 	stagedraw.current_postprocess_fbpair = foreground;
 
@@ -1041,21 +1051,21 @@ void stage_draw_scene(StageInfo *stage) {
 	// this stuff is not affected by the screen shake effect
 	stage_draw_overlay();
 
-	coevent_signal(&stagedraw.events.postprocess_after_overlay);
+	// coevent_signal(&stagedraw.events.postprocess_after_overlay);
 
-	// stage postprocessing
-	apply_shader_rules(global.stage->procs->postprocess_rules, foreground);
+	// // stage postprocessing
+	// apply_shader_rules(global.stage->procs->postprocess_rules, foreground);
 
 	// custom postprocessing
-	postprocess(
-		stagedraw.viewport_pp,
-		foreground,
-		postprocess_prepare,
-		draw_framebuffer_tex,
-		VIEWPORT_W,
-		VIEWPORT_H,
-		NULL
-	);
+	// postprocess(
+	// 	stagedraw.viewport_pp,
+	// 	foreground,
+	// 	postprocess_prepare,
+	// 	draw_framebuffer_tex,
+	// 	VIEWPORT_W,
+	// 	VIEWPORT_H,
+	// 	NULL
+	// );
 
 	stagedraw.current_postprocess_fbpair = NULL;
 
@@ -1630,9 +1640,10 @@ void stage_draw_hud(void) {
 	r_mat_mv_push();
 	r_mat_mv_translate(SCREEN_W * 0.5, SCREEN_H * 0.5, 0);
 	r_mat_mv_scale(SCREEN_W, SCREEN_W, 1);
+	// r_mat_mv_rotate(M_PI, -1, 1, 0);
 	r_shader_standard();
-	r_uniform_sampler("tex", "hud");
-	r_draw_model("hud");
+	r_uniform_sampler("tex", "hud_long");
+	r_draw_model("hud_long");
 	r_mat_mv_pop();
 
 	r_blend(BLEND_PREMUL_ALPHA);
@@ -1734,6 +1745,42 @@ void stage_draw_hud(void) {
 				.frag = color_mul(RGBA(0.5, 0.5, 0.6, 0.5), &labels.lb_baseclr),
 			}
 		});
+
+
+
+
+		//------------------variation
+
+		draw_fragments(&(DrawFragmentsParams) {
+			.fill = spr_life,
+			.pos = { 0, labels.y.lives + labels.y_ofs.lives_display },
+			.origin_offset = { 0, 0 },
+			.limits = { PLR_MAX_LIVES, PLR_MAX_LIFE_FRAGMENTS },
+			.filled = { global.plr.lives, global.plr.life_fragments },
+			.alpha = 1,
+			.spacing = spacing,
+			.color = {
+				.fill = color_mul(RGBA(1, 1, 1, 1), &labels.lb_baseclr),
+				.back = RGBA(0, 0, 0, 0.5),
+				.frag = RGBA(0.5, 0.5, 0.6, 0.5),
+			}
+		});
+
+		draw_fragments(&(DrawFragmentsParams) {
+			.fill = spr_bomb,
+			.pos = { 0, labels.y.bombs + labels.y_ofs.bombs_display },
+			.origin_offset = { 0, 0.05 },
+			.limits = { PLR_MAX_BOMBS, PLR_MAX_BOMB_FRAGMENTS },
+			.filled = { global.plr.bombs, global.plr.bomb_fragments },
+			.alpha = 1,
+			.spacing = spacing,
+			.color = {
+				.fill = color_mul(RGBA(1, 1, 1, 1), &labels.lb_baseclr),
+				.back = color_mul(RGBA(0, 0, 0, 0.5), &labels.lb_baseclr),
+				.frag = color_mul(RGBA(0.5, 0.5, 0.6, 0.5), &labels.lb_baseclr),
+			}
+		});
+		//------------------variation-end
 
 		r_mat_mv_pop();
 	}
