@@ -89,6 +89,7 @@
 	CONFIGDEF_INT       (VERSION,                   "@version",                             0) \
 	\
 	CONFIGDEF_STRING    (PLAYERNAME,                "playername",                           "Player") \
+	CONFIGDEF_INT       (PLAYER_REGIME,             "player_regime",                           0) \
 	CONFIGDEF_INT       (FULLSCREEN,                "fullscreen",                           0) \
 	CONFIGDEF_INT       (VID_WIDTH,                 "vid_width",                            RESX) \
 	CONFIGDEF_INT       (VID_HEIGHT,                "vid_height",                           RESY) \
