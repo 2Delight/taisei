@@ -2,7 +2,7 @@
  * This software is licensed under the terms of the MIT License.
  * See COPYING for further information.
  * ---
- * Copyright (c) 2011-2019, Lukas Weber <laochailan@web.de>.
+ * Copyright (c) 2011-2019, Lukas Weber s<laochailan@web.de>.
  * Copyright (c) 2012-2019, Andrei Alexeyev <akari@taisei-project.org>.
  */
 
@@ -115,6 +115,43 @@ static void transition_to_game(double fade) {
 }
 
 MenuData* create_char_menu(void) {
+	MenuData *m = alloc_menu();
+
+	m->input = char_menu_input;
+	m->draw = draw_char_menu;
+	m->logic = update_char_menu;
+	m->end = end_char_menu;
+	m->transition = TransFadeBlack;
+	m->flags = MF_Abortable;
+
+	auto ctx = ALLOC(CharMenuContext, {
+		.subshot = progress.game_settings.shotmode,
+		.prev_selected_char = -1,
+	});
+	m->context = ctx;
+
+	for(uintptr_t i = 0; i < NUM_CHARACTERS; ++i) {
+		MenuEntry *e = add_menu_entry(m, NULL, set_player_mode, (void*)i);
+		e->transition = transition_to_game;
+		e->drawdata = 1;
+
+		if(i == progress.game_settings.character) {
+			m->cursor = i;
+		}
+	}
+
+	for(CharacterID c = 0; c < NUM_CHARACTERS; ++c) {
+		ctx->char_draw_order[c] = c;
+	}
+
+	m->drawdata[1] = 1;
+
+	return m;
+}
+
+
+
+MenuData* create_char_menu_second(void) {
 	MenuData *m = alloc_menu();
 
 	m->input = char_menu_input;

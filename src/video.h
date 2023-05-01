@@ -19,7 +19,7 @@
 
 enum {
 	// virtual screen coordinates
-	SCREEN_W = 800,
+	SCREEN_W = 1600,
 	SCREEN_H = 600,
 };
 

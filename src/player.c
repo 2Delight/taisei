@@ -425,7 +425,7 @@ bool player_should_shoot(Player *plr) {
 	return
 		(plr->inputflags & INFLAG_SHOT) &&
 		!dialog_is_active(global.dialog) &&
-		player_is_alive(&global.plr);
+		player_is_alive(plr);
 }
 
 void player_placeholder_bomb_logic(Player *plr) {
@@ -816,7 +816,7 @@ static void player_powersurge_expired(Player *plr) {
 		.flags = PFLAG_REQUIREDPARTICLE | PFLAG_NOREFLECT,
 	);
 
-	player_add_points(&global.plr, bonus.score, plr->pos);
+	player_add_points(plr, bonus.score, plr->pos);
 	ent_area_damage(plr->pos, bonus.discharge_range, &(DamageInfo) { bonus.discharge_damage, DMG_PLAYER_DISCHARGE }, NULL, NULL);
 
 	INVOKE_TASK(powersurge_discharge_clearhazards, plr->pos, bonus.discharge_range, 10);
@@ -1261,7 +1261,7 @@ static bool player_applymovement_gamepad(Player *plr) {
 
 	if(direction) {
 		plr->gamepadmove = true;
-		player_move(&global.plr, direction);
+		player_move(plr, direction);
 	}
 
 	return true;
@@ -1326,7 +1326,7 @@ void player_applymovement(Player *plr) {
 		direction /= cabs(direction);
 
 	if(direction)
-		player_move(&global.plr, direction);
+		player_move(plr, direction);
 }
 
 void player_fix_input(Player *plr, ReplayState *rpy_out) {
@@ -1621,13 +1621,13 @@ void player_register_damage(Player *plr, EntityInterface *target, const DamageIn
 		switch(target->type) {
 			case ENT_TYPE_ID(Enemy): {
 				pos = ENT_CAST(target, Enemy)->pos;
-				player_add_points(&global.plr, damage->amount * 0.5, pos);
+				player_add_points(plr, damage->amount * 0.5, pos);
 				break;
 			}
 
 			case ENT_TYPE_ID(Boss): {
 				pos = ENT_CAST(target, Boss)->pos;
-				player_add_points(&global.plr, damage->amount * 0.2, pos);
+				player_add_points(plr, damage->amount * 0.2, pos);
 				break;
 			}
 

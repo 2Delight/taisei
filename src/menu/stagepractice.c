@@ -21,7 +21,7 @@ static void draw_stgpract_menu(MenuData *m) {
 	draw_menu_list(m, 100, 100, NULL, SCREEN_H, NULL);
 }
 
-MenuData* create_stgpract_menu(Difficulty diff) {
+MenuData* create_stgpract_menu(Difficulty diff, bool isCompetetive) {
 	char title[128];
 
 	MenuData *m = alloc_menu();
@@ -41,12 +41,22 @@ MenuData* create_stgpract_menu(Difficulty diff) {
 
 		StageProgress *p = stageinfo_get_progress(stg, diff, false);
 
-		if(p && p->unlocked) {
-			snprintf(title, sizeof(title), "%s: %s", stg->title, stg->subtitle);
-			add_menu_entry(m, title, start_game_no_difficulty_menu, stg);
+		if (isCompetetive) {
+            if(p && p->unlocked) {
+			    snprintf(title, sizeof(title), "%s: %s", stg->title, stg->subtitle);
+			    add_menu_entry(m, title, start_game_competetive, stg);
+		    } else {
+			    snprintf(title, sizeof(title), "%s: ???????", stg->title);
+			    add_menu_entry(m, title, NULL, NULL);
+		    }
 		} else {
-			snprintf(title, sizeof(title), "%s: ???????", stg->title);
-			add_menu_entry(m, title, NULL, NULL);
+			if(p && p->unlocked) {
+			    snprintf(title, sizeof(title), "%s: %s", stg->title, stg->subtitle);
+			    add_menu_entry(m, title, start_game_no_difficulty_menu, stg);
+		    } else {
+			    snprintf(title, sizeof(title), "%s: ???????", stg->title);
+			    add_menu_entry(m, title, NULL, NULL);
+		    }
 		}
 	}
 

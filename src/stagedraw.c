@@ -283,10 +283,12 @@ void stage_draw_pre_init(void) {
 		"powersurge_flow",
 		"titletransition",
 		"hud",
+		"hud_long",
 	NULL);
 
 	preload_resources(RES_MODEL, RESF_PERMANENT,
 		"hud",
+		"hud_long",
 	NULL);
 
 	preload_resources(RES_SHADER_PROGRAM, RESF_PERMANENT,
@@ -1614,8 +1616,8 @@ void stage_draw_hud(void) {
 	r_mat_mv_translate(SCREEN_W * 0.5, SCREEN_H * 0.5, 0);
 	r_mat_mv_scale(SCREEN_W, SCREEN_W, 1);
 	r_shader_standard();
-	r_uniform_sampler("tex", "hud");
-	r_draw_model("hud");
+	r_uniform_sampler("tex", "hud_long");
+	r_draw_model("hud_long");
 	r_mat_mv_pop();
 
 	r_blend(BLEND_PREMUL_ALPHA);

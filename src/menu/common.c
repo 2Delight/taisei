@@ -32,6 +32,8 @@ typedef struct StartGameContext {
 } StartGameContext;
 
 static void start_game_do_pick_character(CallChainResult ccr);
+static void start_comptetive_game_do_first_pick_character(CallChainResult ccr);
+static void start_comptetive_game_do_second_pick_character(CallChainResult ccr);
 static void start_game_do_enter_stage(CallChainResult ccr);
 static void start_game_do_leave_stage(CallChainResult ccr);
 static void start_game_do_show_ending(CallChainResult ccr);
@@ -199,6 +201,63 @@ void start_game(MenuData *m, void *arg) {
 void start_game_no_difficulty_menu(MenuData *m, void *arg) {
 	start_game_internal(m, (StageInfo*)arg, false);
 }
+
+void start_game_competetive(MenuData *m, void *arg) {
+	StageInfo* info = (StageInfo*)arg;
+	bool difficulty_menu = false;
+
+	auto ctx = ALLOC(StartGameContext);
+
+	if(info == NULL) {
+		global.is_practice_mode = false;
+		ctx->current_stage = ctx->restart_stage = stageinfo_get_by_id(1);
+	} else {
+		global.is_practice_mode = (info->type != STAGE_EXTRA);
+		ctx->current_stage = info;
+		ctx->restart_stage = info;
+	}
+
+	Difficulty stagediff = info ? info->difficulty : D_Any;
+
+	CallChain cc_pick_character = CALLCHAIN(start_comptetive_game_do_first_pick_character, ctx);
+
+	if(stagediff == D_Any) {
+		ctx->difficulty = progress.game_settings.difficulty;
+		run_call_chain(&cc_pick_character, NULL);
+	} else {
+		ctx->difficulty = stagediff;
+		run_call_chain(&cc_pick_character, NULL);
+	}
+}
+
+static void start_comptetive_game_do_first_pick_character(CallChainResult ccr) {
+	StartGameContext *ctx = ccr.ctx;
+	MenuData *prev_menu = ccr.result;
+	if(prev_menu) {
+		if(prev_menu->state == MS_Dead) {
+			return;
+		}
+	}
+
+	assert(ctx->char_menu == NULL);
+	ctx->char_menu = create_char_menu();
+    enter_menu(ctx->char_menu, CALLCHAIN(start_comptetive_game_do_second_pick_character, ctx));
+}
+
+static void start_comptetive_game_do_second_pick_character(CallChainResult ccr) {
+	StartGameContext *ctx = ccr.ctx;
+	MenuData *prev_menu = ccr.result;
+
+    if(prev_menu) {
+		if(prev_menu->state == MS_Dead) {
+			return;
+		}
+	}
+	kill_menu(ctx->char_menu);
+	ctx->char_menu = create_char_menu();
+	enter_menu(ctx->char_menu, CALLCHAIN(start_game_do_enter_stage, ctx));
+}
+
 
 void draw_menu_selector(float x, float y, float w, float h, float t) {
 	Sprite *bg = res_sprite("part/smoke");
