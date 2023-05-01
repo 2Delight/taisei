@@ -88,6 +88,9 @@ typedef enum GameoverType {
 typedef struct {
 	int8_t diff; // this holds values of type Difficulty, but should be signed to prevent obscure overflow errors
 	Player plr;
+	Player plr_second;
+
+	bool second_player;
 
 	ProjectileList projs;
 	ProjectileList particles;

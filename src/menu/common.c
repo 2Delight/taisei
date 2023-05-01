@@ -41,6 +41,7 @@ static void start_game_do_show_credits(CallChainResult ccr);
 static void start_game_do_cleanup(CallChainResult ccr);
 
 static void start_game_internal(MenuData *menu, StageInfo *info, bool difficulty_menu) {
+	global.second_player = false;
 	auto ctx = ALLOC(StartGameContext);
 
 	if(info == NULL) {
@@ -85,7 +86,7 @@ static void start_game_do_pick_character(CallChainResult ccr) {
 	}
 
 	assert(ctx->char_menu == NULL);
-	ctx->char_menu = create_char_menu();
+	ctx->char_menu = create_char_menu(false);
 	enter_menu(ctx->char_menu, CALLCHAIN(start_game_do_enter_stage, ctx));
 }
 
@@ -101,6 +102,13 @@ static void reset_game(StartGameContext *ctx) {
 		progress.game_settings.character,
 		progress.game_settings.shotmode
 	);
+	if (global.second_player) {
+		global.plr_second.mode = plrmode_find(
+			progress.game_settings.character_second,
+			progress.game_settings.shotmode_second
+		);
+		log_info("SECOND PLAYER INIt %d", progress.game_settings.character_second);
+	}
 	global.diff = ctx->difficulty;
 
 	assert(global.plr.mode != NULL);
@@ -203,6 +211,7 @@ void start_game_no_difficulty_menu(MenuData *m, void *arg) {
 }
 
 void start_game_competetive(MenuData *m, void *arg) {
+	global.second_player = true;
 	StageInfo* info = (StageInfo*)arg;
 	bool difficulty_menu = false;
 
@@ -240,7 +249,7 @@ static void start_comptetive_game_do_first_pick_character(CallChainResult ccr) {
 	}
 
 	assert(ctx->char_menu == NULL);
-	ctx->char_menu = create_char_menu();
+	ctx->char_menu = create_char_menu(false);
     enter_menu(ctx->char_menu, CALLCHAIN(start_comptetive_game_do_second_pick_character, ctx));
 }
 
@@ -254,7 +263,7 @@ static void start_comptetive_game_do_second_pick_character(CallChainResult ccr) 
 		}
 	}
 	kill_menu(ctx->char_menu);
-	ctx->char_menu = create_char_menu();
+	ctx->char_menu = create_char_menu(true);
 	enter_menu(ctx->char_menu, CALLCHAIN(start_game_do_enter_stage, ctx));
 }
 

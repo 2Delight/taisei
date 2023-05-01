@@ -20,6 +20,8 @@
 #define SELECTED_SUBSHOT(m) (((CharMenuContext*)(m)->context)->subshot)
 #define DESCRIPTION_WIDTH (SCREEN_W / 3 + 40)
 
+static bool selecting_second_char = 0;
+
 enum {
 	F_HAPPY,
 	F_NORMAL,
@@ -61,6 +63,11 @@ typedef struct CharMenuContext {
 } CharMenuContext;
 
 static void set_player_mode(MenuData *m, void *p) {
+	if (selecting_second_char) {
+		progress.game_settings.character_second = (CharacterID)(uintptr_t)p;
+		progress.game_settings.shotmode_second = SELECTED_SUBSHOT(m);
+		return;
+	}
 	progress.game_settings.character = (CharacterID)(uintptr_t)p;
 	progress.game_settings.shotmode = SELECTED_SUBSHOT(m);
 }
@@ -114,44 +121,8 @@ static void transition_to_game(double fade) {
 	fade_out(pow(fmax(0, (fade - 0.5) * 2), 2));
 }
 
-MenuData* create_char_menu(void) {
-	MenuData *m = alloc_menu();
-
-	m->input = char_menu_input;
-	m->draw = draw_char_menu;
-	m->logic = update_char_menu;
-	m->end = end_char_menu;
-	m->transition = TransFadeBlack;
-	m->flags = MF_Abortable;
-
-	auto ctx = ALLOC(CharMenuContext, {
-		.subshot = progress.game_settings.shotmode,
-		.prev_selected_char = -1,
-	});
-	m->context = ctx;
-
-	for(uintptr_t i = 0; i < NUM_CHARACTERS; ++i) {
-		MenuEntry *e = add_menu_entry(m, NULL, set_player_mode, (void*)i);
-		e->transition = transition_to_game;
-		e->drawdata = 1;
-
-		if(i == progress.game_settings.character) {
-			m->cursor = i;
-		}
-	}
-
-	for(CharacterID c = 0; c < NUM_CHARACTERS; ++c) {
-		ctx->char_draw_order[c] = c;
-	}
-
-	m->drawdata[1] = 1;
-
-	return m;
-}
-
-
-
-MenuData* create_char_menu_second(void) {
+MenuData* create_char_menu(bool second) {
+	selecting_second_char = second;
 	MenuData *m = alloc_menu();
 
 	m->input = char_menu_input;

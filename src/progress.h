@@ -103,6 +103,8 @@ typedef struct GlobalProgress {
 		uint8_t difficulty;
 		uint8_t character;
 		uint8_t shotmode;
+		uint8_t character_second;
+		uint8_t shotmode_second;
 	} game_settings;
 } GlobalProgress;
 

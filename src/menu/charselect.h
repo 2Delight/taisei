@@ -11,6 +11,6 @@
 
 #include "menu.h"
 
-MenuData* create_char_menu(void);
+MenuData* create_char_menu(bool second_char);
 void draw_char_menu(MenuData *menu);
 void preload_char_menu(void);
