@@ -1616,8 +1616,13 @@ void stage_draw_hud(void) {
 	r_mat_mv_translate(SCREEN_W * 0.5, SCREEN_H * 0.5, 0);
 	r_mat_mv_scale(SCREEN_W, SCREEN_W, 1);
 	r_shader_standard();
-	r_uniform_sampler("tex", "hud_long");
-	r_draw_model("hud_long");
+	if (global.second_player) {
+		r_uniform_sampler("tex", "hud_long");
+		r_draw_model("hud_long");
+	} else {
+		r_uniform_sampler("tex", "hud");
+		r_draw_model("hud");
+	}
 	r_mat_mv_pop();
 
 	r_blend(BLEND_PREMUL_ALPHA);

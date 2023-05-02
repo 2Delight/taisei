@@ -90,6 +90,13 @@ static void close_menu_finish(CallChainResult ccr) {
 }
 
 void close_menu(MenuData *menu) {
+	video_set_mode(
+		config_get_int(CONFIG_VID_DISPLAY),
+		(global.second_player? 2: 1) * config_get_int(CONFIG_VID_WIDTH),
+		config_get_int(CONFIG_VID_HEIGHT),
+		config_get_int(CONFIG_FULLSCREEN),
+		(global.second_player? 0: 1) * config_get_int(CONFIG_VID_RESIZABLE)		
+	);
 	TransitionRule trans = menu->transition;
 
 	assert(menu->state != MS_Dead);

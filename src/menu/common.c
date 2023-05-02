@@ -192,14 +192,21 @@ static void start_game_do_show_credits(CallChainResult ccr) {
 
 static void start_game_do_cleanup(CallChainResult ccr) {
 	StartGameContext *ctx = ccr.ctx;
+	
+	
+
 	replay_reset(&ctx->replay);
 	kill_aux_menus(ctx);
 	mem_free(ctx);
 	free_resources(false);
 	global.gameover = GAMEOVER_NONE;
 	replay_state_deinit(&global.replay.output);
+	
 	main_menu_update_practice_menus();
 	audio_bgm_play(res_bgm("menu"), true, 0, 0);
+
+	global.second_player = false;
+	// validate_screen_ratio();
 }
 
 void start_game(MenuData *m, void *arg) {
@@ -211,7 +218,7 @@ void start_game_no_difficulty_menu(MenuData *m, void *arg) {
 }
 
 void start_game_competetive(MenuData *m, void *arg) {
-	global.second_player = true;
+	
 	StageInfo* info = (StageInfo*)arg;
 	bool difficulty_menu = false;
 
@@ -256,6 +263,8 @@ static void start_comptetive_game_do_first_pick_character(CallChainResult ccr) {
 static void start_comptetive_game_do_second_pick_character(CallChainResult ccr) {
 	StartGameContext *ctx = ccr.ctx;
 	MenuData *prev_menu = ccr.result;
+
+	global.second_player = true;
 
     if(prev_menu) {
 		if(prev_menu->state == MS_Dead) {
