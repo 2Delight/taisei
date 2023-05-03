@@ -169,6 +169,7 @@ static void start_game_do_leave_stage(CallChainResult ccr) {
 	} else {
 		ask_save_replay(&ctx->replay, CALLCHAIN(start_game_do_cleanup, ctx));
 	}
+	global.second_player = false;
 }
 
 static void start_game_do_show_ending(CallChainResult ccr) {

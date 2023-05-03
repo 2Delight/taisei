@@ -95,8 +95,11 @@ void close_menu(MenuData *menu) {
 		(global.second_player? 2: 1) * config_get_int(CONFIG_VID_WIDTH),
 		config_get_int(CONFIG_VID_HEIGHT),
 		config_get_int(CONFIG_FULLSCREEN),
-		(global.second_player? 0: 1) * config_get_int(CONFIG_VID_RESIZABLE)		
+		config_get_int(CONFIG_VID_RESIZABLE)		
 	);
+	// update_ortho_and_tex();
+	video_swap_buffers();
+
 	TransitionRule trans = menu->transition;
 
 	assert(menu->state != MS_Dead);

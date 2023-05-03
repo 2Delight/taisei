@@ -68,7 +68,7 @@ Framebuffer *video_postprocess_get_framebuffer(VideoPostProcess *vpp) {
 static void postprocess_prepare(Framebuffer *fb, ShaderProgram *s, void *arg) {
 	VideoPostProcess *vpp = arg;
 	r_uniform_int("frames", vpp->frames);
-	r_uniform_vec2("viewport", SCREEN_W, SCREEN_H);
+	r_uniform_vec2("viewport", (global.second_player? 2: 1) * SCREEN_W, SCREEN_H);
 }
 
 Framebuffer *video_postprocess_render(VideoPostProcess *vpp) {
@@ -81,7 +81,7 @@ Framebuffer *video_postprocess_render(VideoPostProcess *vpp) {
 		&vpp->framebuffers,
 		postprocess_prepare,
 		draw_framebuffer_tex,
-		SCREEN_W,
+		(global.second_player? 2: 1) * SCREEN_W,
 		SCREEN_H,
 		vpp
 	);

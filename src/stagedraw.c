@@ -965,7 +965,7 @@ void stage_draw_viewport(void) {
 	r_mat_mv_push();
 	r_mat_mv_scale(1/facw, 1/fach, 1);
 	r_mat_mv_translate(roundf(facw * VIEWPORT_X), roundf(fach * VIEWPORT_Y), 0);
-	r_mat_mv_scale(roundf(scale * VIEWPORT_W), roundf(scale * VIEWPORT_H), 1);
+	r_mat_mv_scale(roundf(scale *(global.second_player? 2: 1) *  VIEWPORT_W), roundf(scale * VIEWPORT_H), 1);
 	r_mat_mv_translate(0.5, 0.5, 0);
 	r_draw_quad();
 	r_mat_mv_pop();
@@ -1046,7 +1046,7 @@ void stage_draw_scene(StageInfo *stage) {
 
 	// prepare for 2D rendering into the main framebuffer (actual screen)
 	r_framebuffer(video_get_screen_framebuffer());
-	set_ortho(SCREEN_W, SCREEN_H);
+	set_ortho((global.second_player? 2: 1) * SCREEN_W, SCREEN_H);
 
 	// draw viewport contents
 	stage_draw_viewport();
@@ -1485,7 +1485,7 @@ void stage_draw_bottom_text(void) {
 
 	text_draw(buf, &(TextParams) {
 		.align = ALIGN_RIGHT,
-		.pos = { SCREEN_W, SCREEN_H - 0.5 * text_height(font, buf, 0) },
+		.pos = {(global.second_player? 2: 1) *  SCREEN_W, SCREEN_H - 0.5 * text_height(font, buf, 0) },
 		.font_ptr = font,
 	});
 
@@ -1613,8 +1613,8 @@ static void stage_draw_framerate_graphs(float x, float y, float w, float h) {
 void stage_draw_hud(void) {
 	// Background
 	r_mat_mv_push();
-	r_mat_mv_translate(SCREEN_W * 0.5, SCREEN_H * 0.5, 0);
-	r_mat_mv_scale(SCREEN_W, SCREEN_W, 1);
+	r_mat_mv_translate((global.second_player? 2: 1) * SCREEN_W * 0.5, SCREEN_H * 0.5, 0);
+	r_mat_mv_scale((global.second_player? 2: 1) * SCREEN_W, (global.second_player? 2: 1) * SCREEN_W, 1);
 	r_shader_standard();
 	if (global.second_player) {
 		r_uniform_sampler("tex", "hud_long");

@@ -160,7 +160,7 @@ void fill_screen(const char *name) {
 void fill_screen_p(Texture *tex) {
 	uint tw, th;
 	r_texture_get_size(tex, 0, &tw, &th);
-	begin_draw_texture((FloatRect){ SCREEN_W*0.5, SCREEN_H*0.5, SCREEN_W, SCREEN_H }, (FloatRect){ 0, 0, tw, th }, tex);
+	begin_draw_texture((FloatRect){ (global.second_player? 2: 1) * SCREEN_W*0.5, SCREEN_H*0.5,(global.second_player? 2: 1) *  SCREEN_W, SCREEN_H }, (FloatRect){ 0, 0, tw, th }, tex);
 	r_draw_quad();
 	end_draw_texture();
 }

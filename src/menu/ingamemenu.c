@@ -174,7 +174,7 @@ void update_ingame_menu(MenuData *menu) {
 }
 
 void draw_ingame_menu(MenuData *menu) {
-	set_ortho(SCREEN_W, SCREEN_H);
+	set_ortho((global.second_player? 2: 1) * SCREEN_W, SCREEN_H);
 	draw_ingame_menu_bg(menu, 1.0-menu_fade(menu));
 	r_state_push();
 

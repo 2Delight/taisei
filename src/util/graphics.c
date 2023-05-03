@@ -29,7 +29,7 @@ void colorfill(float r, float g, float b, float a) {
 	r_color4(r,g,b,a);
 
 	r_mat_mv_push();
-	r_mat_mv_scale(SCREEN_W,SCREEN_H,1);
+	r_mat_mv_scale((global.second_player? 2: 1) * SCREEN_W,SCREEN_H,1);
 	r_mat_mv_translate(0.5,0.5,0);
 
 	r_draw_quad();

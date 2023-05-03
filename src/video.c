@@ -213,10 +213,10 @@ static FloatExtent video_get_viewport_size_for_framebuffer(IntExtent framebuffer
 	float h = framebuffer_size.h;
 	float r = w / h;
 
-	if(r > VIDEO_ASPECT_RATIO) {
-		w = h * VIDEO_ASPECT_RATIO;
-	} else if(r < VIDEO_ASPECT_RATIO) {
-		h = w / VIDEO_ASPECT_RATIO;
+	if(r > (global.second_player? 2: 1) * VIDEO_ASPECT_RATIO) {
+		w = h *(global.second_player? 2: 1) *  VIDEO_ASPECT_RATIO;
+	} else if(r < (global.second_player? 2: 1) * VIDEO_ASPECT_RATIO) {
+		h = w / (global.second_player? 2: 1) * VIDEO_ASPECT_RATIO;
 	}
 
 	return (FloatExtent) { w, h };
@@ -285,7 +285,7 @@ static void video_update_mode_lists(void) {
 		// Insert some more windowed modes derived from our "ideal" resolution.
 		// This is the resolution that the assets are optimized for.
 		float ideal_factor = 2;
-		FloatExtent ideal_resolution = { SCREEN_W * ideal_factor, SCREEN_H * ideal_factor };
+		FloatExtent ideal_resolution = { (global.second_player? 2: 1) * SCREEN_W * ideal_factor, SCREEN_H * ideal_factor };
 
 		if(largest_fullscreen_viewport.w == 0) {
 			// no way to determine the upper bound; guess it
@@ -334,7 +334,7 @@ static void video_update_scaling_factor(void) {
 		video.scaling_factor = scaling_factor;
 		video_update_mode_lists();
 
-		IntExtent min_size = coords_ext_pixels_to_screen((IntExtent) { VIDEO_MIN_WIDTH, VIDEO_MIN_HEIGHT });
+		IntExtent min_size = coords_ext_pixels_to_screen((IntExtent) {(global.second_player? 2 : 1) * VIDEO_MIN_WIDTH, VIDEO_MIN_HEIGHT });
 		SDL_SetWindowMinimumSize(video.window, min_size.w, min_size.h);
 	}
 }
@@ -416,7 +416,7 @@ static void video_new_window_internal(uint display, uint w, uint h, uint32_t fla
 		SDL_ShowWindow(video.window);
 
 		if(video.scaling_factor != 0) {
-			IntExtent min_size = coords_ext_pixels_to_screen((IntExtent) { VIDEO_MIN_WIDTH, VIDEO_MIN_HEIGHT });
+			IntExtent min_size = coords_ext_pixels_to_screen((IntExtent) {(global.second_player? 2 : 1) * VIDEO_MIN_WIDTH, VIDEO_MIN_HEIGHT });
 			SDL_SetWindowMinimumSize(video.window, min_size.w, min_size.h);
 		}
 
@@ -877,6 +877,16 @@ Framebuffer *video_get_screen_framebuffer(void) {
 	return video_postprocess_get_framebuffer(video.postprocess);
 }
 
+void update_ortho_and_tex(void) {
+	Framebuffer *pp_fb = video_postprocess_render(video.postprocess);
+
+	if(pp_fb) {
+		r_mat_proj_push_ortho((global.second_player? 2: 1) * SCREEN_W, SCREEN_H);
+		draw_framebuffer_tex(pp_fb, (global.second_player? 2: 1) * SCREEN_W, SCREEN_H);
+		log_info("Updated ortho and tex");
+	}
+}
+
 void video_swap_buffers(void) {
 	Framebuffer *pp_fb = video_postprocess_render(video.postprocess);
 
@@ -887,18 +897,20 @@ void video_swap_buffers(void) {
 		r_framebuffer(NULL);
 
 		r_state_push();
-		r_mat_proj_push_ortho(SCREEN_W, SCREEN_H);
+		r_mat_proj_push_ortho((global.second_player? 2: 1) * SCREEN_W, SCREEN_H);
 		r_shader_standard();
 		r_color3(1, 1, 1);
-		draw_framebuffer_tex(pp_fb, SCREEN_W, SCREEN_H);
+		draw_framebuffer_tex(pp_fb, (global.second_player? 2: 1) * SCREEN_W, SCREEN_H);
 		r_framebuffer_clear(pp_fb, BUFFER_ALL, RGBA(0, 0, 0, 0), 1);
 		r_mat_proj_pop();
 		r_state_pop();
 
 		r_swap(video.window);
 		r_framebuffer(prev_fb);
+		log_info("swap complete");
 	} else {
 		r_swap(video.window);
+		log_info("swap failed");
 	}
 
 	// XXX: Unfortunately, there seems to be no reliable way to sync this up with events
