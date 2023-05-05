@@ -11,6 +11,7 @@
 
 #include "menu.h"
 
+void menu_action_enter_story(MenuData* menu, void* arg);
 void menu_action_enter_options(MenuData *menu, void *arg);
 void menu_action_enter_stagemenu(MenuData *menu, void *arg);
 void menu_action_enter_replayview(MenuData *menu, void *arg);

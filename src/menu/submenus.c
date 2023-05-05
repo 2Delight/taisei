@@ -8,6 +8,7 @@
 
 #include "taisei.h"
 
+#include "common.h"
 #include "menu.h"
 #include "options.h"
 #include "stageselect.h"
@@ -44,15 +45,20 @@ void menu_action_enter_spellpractice(MenuData *menu, void *arg) {
 }
 
 static void stgpract_do_choose_stage(CallChainResult ccr);
-static void competetivestgpract_do_choose_stage(CallChainResult ccr);
 
+void menu_action_enter_story(MenuData* menu, void* arg) {
+	global.second_player = false;
+	start_game(menu, arg);
+}
 
 void menu_action_enter_stagepractice(MenuData *menu, void *arg) {
+	global.second_player = false;
 	enter_menu(create_difficulty_menu(), CALLCHAIN(stgpract_do_choose_stage, NULL));
 }
 
 void menu_action_enter_competetivestagepractice(MenuData *menu, void *arg) {
-	enter_menu(create_difficulty_menu(), CALLCHAIN(competetivestgpract_do_choose_stage, NULL));
+	global.second_player = true;
+	enter_menu(create_difficulty_menu(), CALLCHAIN(stgpract_do_choose_stage, NULL));
 }
 
 static void stgpract_do_choose_stage(CallChainResult ccr) {
@@ -60,16 +66,7 @@ static void stgpract_do_choose_stage(CallChainResult ccr) {
 	assert(prev_menu != NULL);
 
 	if(prev_menu->selected >= 0) {
-			enter_menu(create_stgpract_menu(progress.game_settings.difficulty, false), NO_CALLCHAIN);
-	}
-}
-
-static void competetivestgpract_do_choose_stage(CallChainResult ccr) {
-	MenuData *prev_menu = ccr.result;
-	assert(prev_menu != NULL);
-
-	if(prev_menu->selected >= 0) {
-		enter_menu(create_stgpract_menu(progress.game_settings.difficulty, true), NO_CALLCHAIN);
+			enter_menu(create_stgpract_menu(progress.game_settings.difficulty), NO_CALLCHAIN);
 	}
 }
 

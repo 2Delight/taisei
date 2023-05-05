@@ -29,11 +29,11 @@ typedef struct StartGameContext {
 	MenuData *char_menu;
 	Replay replay;
 	Difficulty difficulty;
+	bool second_player;
+	bool first_is_selected;
 } StartGameContext;
 
 static void start_game_do_pick_character(CallChainResult ccr);
-static void start_comptetive_game_do_first_pick_character(CallChainResult ccr);
-static void start_comptetive_game_do_second_pick_character(CallChainResult ccr);
 static void start_game_do_enter_stage(CallChainResult ccr);
 static void start_game_do_leave_stage(CallChainResult ccr);
 static void start_game_do_show_ending(CallChainResult ccr);
@@ -41,8 +41,10 @@ static void start_game_do_show_credits(CallChainResult ccr);
 static void start_game_do_cleanup(CallChainResult ccr);
 
 static void start_game_internal(MenuData *menu, StageInfo *info, bool difficulty_menu) {
-	global.second_player = false;
 	auto ctx = ALLOC(StartGameContext);
+
+	ctx->second_player = global.second_player;
+	ctx->first_is_selected = false;
 
 	if(info == NULL) {
 		global.is_practice_mode = false;
@@ -77,17 +79,23 @@ static void start_game_do_pick_character(CallChainResult ccr) {
 
 	if(prev_menu) {
 		if(prev_menu->state == MS_Dead) {
-			start_game_do_cleanup(ccr);
+			if (!ctx->second_player) {
+				start_game_do_cleanup(ccr);
+			}
 			return;
 		}
-
-		// came here from the difficulty menu - update our setting
-		ctx->difficulty = progress.game_settings.difficulty;
+		if (!ctx->second_player) {
+			// came here from the difficulty menu - update our setting
+			ctx->difficulty = progress.game_settings.difficulty;
+		}
 	}
 
-	assert(ctx->char_menu == NULL);
-	ctx->char_menu = create_char_menu(false);
-	enter_menu(ctx->char_menu, CALLCHAIN(start_game_do_enter_stage, ctx));
+	// assert(ctx->char_menu == NULL);
+
+	CallChain cc_next = CALLCHAIN((ctx->first_is_selected) ? start_game_do_enter_stage : start_game_do_pick_character, ctx);
+	ctx->char_menu = create_char_menu(ctx->first_is_selected);
+	ctx->first_is_selected = true;
+	enter_menu(ctx->char_menu, cc_next));
 }
 
 static void reset_game(StartGameContext *ctx) {
@@ -246,37 +254,6 @@ void start_game_competetive(MenuData *m, void *arg) {
 		run_call_chain(&cc_pick_character, NULL);
 	}
 }
-
-static void start_comptetive_game_do_first_pick_character(CallChainResult ccr) {
-	StartGameContext *ctx = ccr.ctx;
-	MenuData *prev_menu = ccr.result;
-	if(prev_menu) {
-		if(prev_menu->state == MS_Dead) {
-			return;
-		}
-	}
-
-	assert(ctx->char_menu == NULL);
-	ctx->char_menu = create_char_menu(false);
-    enter_menu(ctx->char_menu, CALLCHAIN(start_comptetive_game_do_second_pick_character, ctx));
-}
-
-static void start_comptetive_game_do_second_pick_character(CallChainResult ccr) {
-	StartGameContext *ctx = ccr.ctx;
-	MenuData *prev_menu = ccr.result;
-
-	global.second_player = true;
-
-    if(prev_menu) {
-		if(prev_menu->state == MS_Dead) {
-			return;
-		}
-	}
-	kill_menu(ctx->char_menu);
-	ctx->char_menu = create_char_menu(true);
-	enter_menu(ctx->char_menu, CALLCHAIN(start_game_do_enter_stage, ctx));
-}
-
 
 void draw_menu_selector(float x, float y, float w, float h, float t) {
 	Sprite *bg = res_sprite("part/smoke");

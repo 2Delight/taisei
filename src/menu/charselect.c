@@ -171,7 +171,7 @@ void draw_char_menu(MenuData *menu) {
 	PlayerCharacter *selected_char = plrchar_get((CharacterID)(uintptr_t)dynarray_get(&menu->entries, menu->cursor).arg);
 
 	draw_main_menu_bg(menu, SCREEN_W/4+100, 0, 0.1 * (0.5 + 0.5 * menu->drawdata[1]), "menu/mainmenubg", selected_char->menu_texture_name);
-	draw_menu_title(menu, selecting_second_char? "Select Character For Second Player" : "Select Character");
+	draw_menu_title(menu, (selecting_second_char) ? "Select Character For Second Player" : "Select Character");
 
 	CharacterID current_char = 0;
 
