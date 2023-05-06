@@ -95,7 +95,7 @@ static void start_game_do_pick_character(CallChainResult ccr) {
 	CallChain cc_next = CALLCHAIN((ctx->first_is_selected) ? start_game_do_enter_stage : start_game_do_pick_character, ctx);
 	ctx->char_menu = create_char_menu(ctx->first_is_selected);
 	ctx->first_is_selected = true;
-	enter_menu(ctx->char_menu, cc_next));
+	enter_menu(ctx->char_menu, cc_next);
 }
 
 static void reset_game(StartGameContext *ctx) {
