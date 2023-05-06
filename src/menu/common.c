@@ -226,35 +226,6 @@ void start_game_no_difficulty_menu(MenuData *m, void *arg) {
 	start_game_internal(m, (StageInfo*)arg, false);
 }
 
-void start_game_competetive(MenuData *m, void *arg) {
-	
-	StageInfo* info = (StageInfo*)arg;
-	bool difficulty_menu = false;
-
-	auto ctx = ALLOC(StartGameContext);
-
-	if(info == NULL) {
-		global.is_practice_mode = false;
-		ctx->current_stage = ctx->restart_stage = stageinfo_get_by_id(1);
-	} else {
-		global.is_practice_mode = (info->type != STAGE_EXTRA);
-		ctx->current_stage = info;
-		ctx->restart_stage = info;
-	}
-
-	Difficulty stagediff = info ? info->difficulty : D_Any;
-
-	CallChain cc_pick_character = CALLCHAIN(start_comptetive_game_do_first_pick_character, ctx);
-
-	if(stagediff == D_Any) {
-		ctx->difficulty = progress.game_settings.difficulty;
-		run_call_chain(&cc_pick_character, NULL);
-	} else {
-		ctx->difficulty = stagediff;
-		run_call_chain(&cc_pick_character, NULL);
-	}
-}
-
 void draw_menu_selector(float x, float y, float w, float h, float t) {
 	Sprite *bg = res_sprite("part/smoke");
 	r_mat_mv_push();
