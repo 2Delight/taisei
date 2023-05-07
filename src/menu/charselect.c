@@ -60,10 +60,11 @@ typedef struct CharMenuContext {
 	int8_t subshot;
 	int8_t char_draw_order[NUM_CHARACTERS];
 	int8_t prev_selected_char;
+	bool for_second_player;
 } CharMenuContext;
 
 static void set_player_mode(MenuData *m, void *p) {
-	if (selecting_second_char) {
+	if (((CharMenuContext *)m->context)->for_second_player) {
 		progress.game_settings.character_second = (CharacterID)(uintptr_t)p;
 		progress.game_settings.shotmode_second = SELECTED_SUBSHOT(m);
 		return;
@@ -121,8 +122,7 @@ static void transition_to_game(double fade) {
 	fade_out(pow(fmax(0, (fade - 0.5) * 2), 2));
 }
 
-MenuData* create_char_menu(bool second) {
-	selecting_second_char = second;
+MenuData* create_char_menu(bool second_char) {
 	MenuData *m = alloc_menu();
 
 	m->input = char_menu_input;
@@ -135,6 +135,7 @@ MenuData* create_char_menu(bool second) {
 	auto ctx = ALLOC(CharMenuContext, {
 		.subshot = progress.game_settings.shotmode,
 		.prev_selected_char = -1,
+		.for_second_player = second_char
 	});
 	m->context = ctx;
 
@@ -171,7 +172,7 @@ void draw_char_menu(MenuData *menu) {
 	PlayerCharacter *selected_char = plrchar_get((CharacterID)(uintptr_t)dynarray_get(&menu->entries, menu->cursor).arg);
 
 	draw_main_menu_bg(menu, SCREEN_W/4+100, 0, 0.1 * (0.5 + 0.5 * menu->drawdata[1]), "menu/mainmenubg", selected_char->menu_texture_name);
-	draw_menu_title(menu, (selecting_second_char) ? "Select Character For Second Player" : "Select Character");
+	draw_menu_title(menu, (ctx->for_second_player) ? "Select Character For Second Player" : "Select Character");
 
 	CharacterID current_char = 0;
 

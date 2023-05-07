@@ -84,5 +84,6 @@ VideoMode video_get_mode(uint idx, bool fullscreen);
 uint video_get_num_modes(bool fullscreen);
 VideoMode video_get_current_mode(void);
 double video_get_scaling_factor(void);
+void resize_for_competitive(bool second_player);
 SDL_Window *video_get_window(void);
 void update_ortho_and_tex(void);

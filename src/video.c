@@ -537,6 +537,16 @@ void video_set_mode(uint display, uint w, uint h, bool fs, bool resizable) {
 	}
 }
 
+void resize_for_competitive(bool second_player) {
+	video_set_mode(
+		config_get_int(CONFIG_VID_DISPLAY),
+		(second_player + 1) * config_get_int(CONFIG_VID_WIDTH),
+		config_get_int(CONFIG_VID_HEIGHT),
+		config_get_int(CONFIG_FULLSCREEN),
+		config_get_int(CONFIG_VID_RESIZABLE)
+	);
+}
+
 SDL_Window *video_get_window(void) {
 	return video.window;
 }

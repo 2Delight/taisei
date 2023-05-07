@@ -45,6 +45,7 @@ typedef struct StageFrameState {
 	float view_shake;
 	int bgm_start_time;
 	double bgm_start_pos;
+	bool with_second_player;
 } StageFrameState;
 
 static StageFrameState *_current_stage_state;  // TODO remove this shitty hack
@@ -1156,6 +1157,7 @@ static void _stage_enter(
 	}
 
 	SCHED_INVOKE_TASK(&fstate->sched, stage_comain, fstate);
+	resize_for_competitive(global.second_player);
 	eventloop_enter(fstate, stage_logic_frame, stage_render_frame, stage_end_loop, FPS);
 }
 
@@ -1222,6 +1224,7 @@ void stage_end_loop(void *ctx) {
 		_stage_enter(stginfo, cc, quicksave, quicksave_is_automatic);
 	} else {
 		demoplayer_resume();
+		resize_for_competitive(false);
 		run_call_chain(&cc, NULL);
 	}
 }

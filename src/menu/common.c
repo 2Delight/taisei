@@ -111,15 +111,18 @@ static void reset_game(StartGameContext *ctx) {
 		progress.game_settings.shotmode
 	);
 	if (global.second_player) {
+		player_init(&global.plr_second);
+		stats_init(&global.plr_second.stats);
 		global.plr_second.mode = plrmode_find(
 			progress.game_settings.character_second,
 			progress.game_settings.shotmode_second
 		);
-		log_info("SECOND PLAYER INIt %d", progress.game_settings.character_second);
+		log_info("SECOND PLAYER INIT %d", progress.game_settings.character_second);
 	}
 	global.diff = ctx->difficulty;
 
 	assert(global.plr.mode != NULL);
+	assert(global.plr_second.mode != NULL);
 }
 
 static void kill_aux_menus(StartGameContext *ctx) {
@@ -214,7 +217,7 @@ static void start_game_do_cleanup(CallChainResult ccr) {
 	main_menu_update_practice_menus();
 	audio_bgm_play(res_bgm("menu"), true, 0, 0);
 
-	global.second_player = false;
+	// global.second_player = false;
 	// validate_screen_ratio();
 }
 
