@@ -27,6 +27,7 @@ typedef struct StartGameContext {
 	StageInfo *current_stage;
 	MenuData *diff_menu;
 	MenuData *char_menu;
+	MenuData* char_menu_second;
 	Replay replay;
 	Difficulty difficulty;
 	bool second_player;
@@ -45,6 +46,7 @@ static void start_game_internal(MenuData *menu, StageInfo *info, bool difficulty
 
 	ctx->second_player = global.second_player;
 	ctx->first_is_selected = false;
+	ctx->diff_menu = (ctx->char_menu = (ctx->char_menu_second = NULL));
 
 	if(info == NULL) {
 		global.is_practice_mode = false;
@@ -79,22 +81,25 @@ static void start_game_do_pick_character(CallChainResult ccr) {
 
 	if(prev_menu) {
 		if(prev_menu->state == MS_Dead) {
-			if (!ctx->second_player) {
-				start_game_do_cleanup(ccr);
-			}
+			start_game_do_cleanup(ccr);
 			return;
 		}
-		if (!ctx->second_player) {
-			// came here from the difficulty menu - update our setting
-			ctx->difficulty = progress.game_settings.difficulty;
-		}
+		// came here from the difficulty menu - update our setting
+		ctx->difficulty = progress.game_settings.difficulty;
 	}
 
 	// assert(ctx->char_menu == NULL);
+	CallChain cc_next = CALLCHAIN((ctx->second_player && !ctx->first_is_selected) ?
+					start_game_do_pick_character :
+					start_game_do_enter_stage, ctx);
 
-	CallChain cc_next = CALLCHAIN((ctx->first_is_selected) ? start_game_do_enter_stage : start_game_do_pick_character, ctx);
-	ctx->char_menu = create_char_menu(ctx->first_is_selected);
-	ctx->first_is_selected = true;
+	if (ctx->first_is_selected) {
+		ctx->char_menu_second = create_char_menu(true);
+	} else {
+		ctx->char_menu = create_char_menu(false);
+		ctx->first_is_selected = true;
+	}
+
 	enter_menu(ctx->char_menu, cc_next);
 }
 
@@ -126,9 +131,10 @@ static void reset_game(StartGameContext *ctx) {
 }
 
 static void kill_aux_menus(StartGameContext *ctx) {
-	kill_menu(ctx->char_menu);
 	kill_menu(ctx->diff_menu);
-	ctx->char_menu = ctx->diff_menu = NULL;
+	kill_menu(ctx->char_menu);
+	kill_menu(ctx->char_menu_second);
+	ctx->diff_menu = (ctx->char_menu = (ctx->char_menu_second = NULL));
 }
 
 static void start_game_do_enter_stage(CallChainResult ccr) {

@@ -25,12 +25,14 @@
 #include "version.h"
 #include "plrmodes.h"
 
-static MenuEntry *spell_practice_entry;
 static MenuEntry *stage_practice_entry;
+static MenuEntry *spell_practice_entry;
+static MenuEntry* c_stage_practice_entry;
 
 void main_menu_update_practice_menus(void) {
 	spell_practice_entry->action = NULL;
 	stage_practice_entry->action = NULL;
+	c_stage_practice_entry->action = NULL;
 
 	int n = stageinfo_get_num_stages();
 	for(int i = 0; i < n; ++i) {
@@ -51,6 +53,7 @@ void main_menu_update_practice_menus(void) {
 
 				if(p && p->unlocked) {
 					stage_practice_entry->action = menu_action_enter_stagepractice;
+					c_stage_practice_entry->action = menu_action_enter_competetivestagepractice;
 					if(spell_practice_entry->action) {
 						break;
 					}
@@ -110,7 +113,7 @@ MenuData* create_main_menu(void) {
 	m->draw = draw_main_menu;
 	m->logic = update_main_menu;
 
-	ptrdiff_t stage_practice_idx, spell_practice_idx;
+	ptrdiff_t stage_practice_idx, spell_practice_idx, c_stage_practice_idx;
 
 	add_menu_entry(m, "Start Story", menu_action_enter_story, NULL);
 	add_menu_entry(m, "Start Extra", NULL, NULL);
@@ -118,7 +121,8 @@ MenuData* create_main_menu(void) {
 	stage_practice_idx = dynarray_indexof(&m->entries, stage_practice_entry);
 	spell_practice_entry = add_menu_entry(m, "Spell Practice", menu_action_enter_spellpractice, NULL);
 	spell_practice_idx = dynarray_indexof(&m->entries, spell_practice_entry);
-	add_menu_entry(m, "Competetive Stage Practice", menu_action_enter_competetivestagepractice, NULL);
+	c_stage_practice_entry = add_menu_entry(m, "Competetive Stage Practice", menu_action_enter_competetivestagepractice, NULL);
+	c_stage_practice_idx = dynarray_indexof(&m->entries, c_stage_practice_entry);
 #ifdef DEBUG
 	add_menu_entry(m, "Select Stage", menu_action_enter_stagemenu, NULL);
 #endif
@@ -132,6 +136,7 @@ MenuData* create_main_menu(void) {
 
 	stage_practice_entry = dynarray_get_ptr(&m->entries, stage_practice_idx);
 	spell_practice_entry = dynarray_get_ptr(&m->entries, spell_practice_idx);
+	c_stage_practice_entry = dynarray_get_ptr(&m->entries, c_stage_practice_idx);
 	main_menu_update_practice_menus();
 
 	progress_unlock_bgm("menu");
