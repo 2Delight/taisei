@@ -32,6 +32,7 @@ typedef struct StartGameContext {
 	Difficulty difficulty;
 	bool second_player;
 	bool first_is_selected;
+	bool second_is_selected;
 } StartGameContext;
 
 static void start_game_do_pick_character(CallChainResult ccr);
@@ -45,7 +46,7 @@ static void start_game_internal(MenuData *menu, StageInfo *info, bool difficulty
 	auto ctx = ALLOC(StartGameContext);
 
 	ctx->second_player = global.second_player;
-	ctx->first_is_selected = false;
+	ctx->first_is_selected = (ctx->second_is_selected = false);
 	ctx->diff_menu = (ctx->char_menu = (ctx->char_menu_second = NULL));
 
 	if(info == NULL) {
@@ -81,11 +82,24 @@ static void start_game_do_pick_character(CallChainResult ccr) {
 
 	if(prev_menu) {
 		if(prev_menu->state == MS_Dead) {
-			start_game_do_cleanup(ccr);
+			ctx->second_is_selected = false;
+			if (prev_menu == ctx->diff_menu) {
+				// In case we didn't get past the first char-menu assume the character hasn't been selected.
+				ctx->first_is_selected = false;
+				start_game_do_cleanup(ccr);
+			}
 			return;
 		}
-		// came here from the difficulty menu - update our setting
-		ctx->difficulty = progress.game_settings.difficulty;
+		if (prev_menu == ctx->difficulty) {
+			// came here from the difficulty menu - update our setting
+			ctx->difficulty = progress.game_settings.difficulty;
+			ctx->char_menu_second = NULL;
+			ctx->first_is_selected = false;
+		} else if (prev_menu == ctx->char_menu) {
+			// If we successfully got past the first char-menu assume the character has been selected.
+			ctx->first_is_selected = true;
+		}
+		
 	}
 
 	// assert(ctx->char_menu == NULL);
@@ -93,14 +107,15 @@ static void start_game_do_pick_character(CallChainResult ccr) {
 					start_game_do_pick_character :
 					start_game_do_enter_stage, ctx);
 
+	MenuData* ptr = NULL;
+
 	if (ctx->first_is_selected) {
-		ctx->char_menu_second = create_char_menu(true);
+		ptr = (ctx->char_menu_second = create_char_menu(true));
 	} else {
-		ctx->char_menu = create_char_menu(false);
-		ctx->first_is_selected = true;
+		ptr = (ctx->char_menu = create_char_menu(false));
 	}
 
-	enter_menu(ctx->char_menu, cc_next);
+	enter_menu(ptr, cc_next);
 }
 
 static void reset_game(StartGameContext *ctx) {
@@ -142,8 +157,14 @@ static void start_game_do_enter_stage(CallChainResult ccr) {
 	MenuData *prev_menu = ccr.result;
 
 	if(prev_menu && prev_menu->state == MS_Dead) {
-		assert(prev_menu == ctx->char_menu);
+		assert(ctx->second_player && prev_menu == ctx->char_menu_second|| !ctx->second_player && prev_menu == ctx->char_menu);
 		ctx->char_menu = NULL;
+
+		if (prev_menu == ctx->char_menu) {
+			ctx->first_is_selected = false;
+		} else if (prev_menu == ctx->char_menu_second) {
+			ctx->second_is_selected = false;
+		}
 
 		if(!ctx->diff_menu) {
 			start_game_do_cleanup(ccr);
