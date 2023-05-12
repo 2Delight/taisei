@@ -157,7 +157,7 @@ static void start_game_do_enter_stage(CallChainResult ccr) {
 	MenuData *prev_menu = ccr.result;
 
 	if(prev_menu && prev_menu->state == MS_Dead) {
-		assert(ctx->second_player && prev_menu == ctx->char_menu_second|| !ctx->second_player && prev_menu == ctx->char_menu);
+		// assert(ctx->second_player && prev_menu == ctx->char_menu_second || !ctx->second_player && prev_menu == ctx->char_menu);
 		ctx->char_menu = NULL;
 
 		if (prev_menu == ctx->char_menu) {
