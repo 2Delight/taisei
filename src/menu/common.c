@@ -90,7 +90,7 @@ static void start_game_do_pick_character(CallChainResult ccr) {
 			}
 			return;
 		}
-		if (prev_menu == ctx->difficulty) {
+		if (prev_menu == ctx->diff_menu) {
 			// came here from the difficulty menu - update our setting
 			ctx->difficulty = progress.game_settings.difficulty;
 			ctx->char_menu_second = NULL;
