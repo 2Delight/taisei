@@ -158,7 +158,7 @@ static void start_game_do_enter_stage(CallChainResult ccr) {
 
 	if(prev_menu && prev_menu->state == MS_Dead) {
 		// assert(ctx->second_player && prev_menu == ctx->char_menu_second || !ctx->second_player && prev_menu == ctx->char_menu);
-		ctx->char_menu = NULL;
+		// ctx->char_menu = NULL;
 
 		if (prev_menu == ctx->char_menu) {
 			ctx->first_is_selected = false;
@@ -207,7 +207,7 @@ static void start_game_do_leave_stage(CallChainResult ccr) {
 	} else {
 		ask_save_replay(&ctx->replay, CALLCHAIN(start_game_do_cleanup, ctx));
 	}
-	global.second_player = false;
+	// global.second_player = false;
 }
 
 static void start_game_do_show_ending(CallChainResult ccr) {
@@ -232,8 +232,6 @@ static void start_game_do_show_credits(CallChainResult ccr) {
 static void start_game_do_cleanup(CallChainResult ccr) {
 	StartGameContext *ctx = ccr.ctx;
 	
-	
-
 	replay_reset(&ctx->replay);
 	kill_aux_menus(ctx);
 	mem_free(ctx);
