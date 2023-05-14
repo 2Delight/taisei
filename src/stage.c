@@ -140,23 +140,31 @@ static void stage_start(StageInfo *stage) {
 	global.voltage_threshold = 0;
 
 	player_stage_pre_init(&global.plr);
+	player_stage_pre_init(&global.plr_second);
 
 	stats_stage_reset(&global.plr.stats);
+	stats_stage_reset(&global.plr_second.stats);
 
 	if(stage->type == STAGE_SPELL) {
 		global.is_practice_mode = true;
 		global.plr.lives = 0;
 		global.plr.bombs = 0;
+		global.plr_second.lives = 0;
+		global.plr_second.bombs = 0;
 	} else if(global.is_practice_mode) {
 		global.plr.lives = PLR_STGPRACTICE_LIVES;
 		global.plr.bombs = PLR_STGPRACTICE_BOMBS;
+		global.plr_second.lives = PLR_STGPRACTICE_LIVES;
+		global.plr_second.bombs = PLR_STGPRACTICE_BOMBS;
 	}
 
 	if(global.is_practice_mode) {
 		global.plr.power_stored = config_get_int(CONFIG_PRACTICE_POWER);
+		global.plr_second.power_stored = config_get_int(CONFIG_PRACTICE_POWER);
 	}
 
 	global.plr.power_stored = iclamp(global.plr.power_stored, 0, PLR_MAX_POWER_STORED);
+	global.plr_second.power_stored = iclamp(global.plr_second.power_stored, 0, PLR_MAX_POWER_STORED);
 
 	reset_all_sfx();
 }
@@ -1021,6 +1029,7 @@ TASK(stage_comain, { StageFrameState *fstate; }) {
 
 	stage->procs->begin();
 	player_stage_post_init(&global.plr);
+	player_stage_post_init(&global.plr_second);
 
 	if(global.stage->type != STAGE_SPELL) {
 		display_stage_title(stage);
@@ -1119,6 +1128,7 @@ static void _stage_enter(
 	rng_seed(&global.rand_game, seed);
 
 	if(global.replay.input.replay) {
+		log_warn("player_init global.plr");
 		player_init(&global.plr);
 		replay_stage_sync_player_state(global.replay.input.stage, &global.plr);
 	}
@@ -1132,8 +1142,12 @@ static void _stage_enter(
 			global.diff,
 			&global.plr
 		);
+		log_warn("player_init global.plr");
 		player_init(&global.plr);
+		log_warn("player_init global.plr_second");
+		player_init(&global.plr_second);
 		replay_stage_sync_player_state(global.replay.output.stage, &global.plr);
+		// replay_stage_sync_player_state(global.replay.output.stage, &global.plr_second);
 	}
 
 	auto fstate = ALLOC(StageFrameState, {

@@ -42,11 +42,16 @@ PlayerCharacter *plrchar_get(CharacterID id) {
 
 void plrchar_preload(PlayerCharacter *pc) {
 	const char *name = pc->lower_name;
+	log_warn("portrait_preload_base_sprite: %s", name);
 	portrait_preload_base_sprite(name, NULL, RESF_DEFAULT);
+	log_warn("portrait_preload_face_sprite");
 	portrait_preload_face_sprite(name, "normal", RESF_DEFAULT);
+	
 
 	char buf[64];
+	log_warn("plrchar_player_anim_name");
 	plrchar_player_anim_name(pc, sizeof(buf), buf);
+	log_warn("preload_resource");
 	preload_resource(RES_ANIM, buf, RESF_DEFAULT);
 }
 
