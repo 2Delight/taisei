@@ -969,6 +969,23 @@ void stage_draw_viewport(void) {
 	r_mat_mv_translate(0.5, 0.5, 0);
 	r_draw_quad();
 	r_mat_mv_pop();
+
+
+
+	if (!global.second_player) {
+		return;
+	}
+
+	r_framebuffer_viewport_current(r_framebuffer_current(), &dest_vp);
+	r_uniform_sampler("tex", r_framebuffer_get_attachment(stagedraw.fb_pairs[FBPAIR_FG].front, FRAMEBUFFER_ATTACH_COLOR0));
+
+	r_mat_mv_push();
+	r_mat_mv_scale(1/facw, 1/fach, 1);
+	r_mat_mv_translate(roundf(facw * (VIEWPORT_X + VIEWPORT_W/2+SCREEN_W)), roundf(fach * VIEWPORT_Y), 0);
+	r_mat_mv_scale(roundf(scale *(global.second_player? 2: 1) *  VIEWPORT_W), roundf(scale * VIEWPORT_H), 1);
+	r_mat_mv_translate(0.5, 0.5, 0);
+	r_draw_quad();
+	r_mat_mv_pop();
 }
 
 void stage_draw_scene(StageInfo *stage) {
@@ -1068,6 +1085,10 @@ void stage_draw_scene(StageInfo *stage) {
 #define HUD_X_SECONDARY_OFS_ICON 18
 #define HUD_X_SECONDARY_OFS_LABEL (HUD_X_SECONDARY_OFS_ICON + 12)
 #define HUD_X_SECONDARY_OFS_VALUE (HUD_X_SECONDARY_OFS_LABEL + 60)
+
+#define HUD_2_X_OFFSET (VIEWPORT_W + VIEWPORT_X + 260)
+#define HUD_2_WIDTH (SCREEN_W - HUD_2_X_OFFSET)
+#define HUD_2_EFFECTIVE_WIDTH (HUD_WIDTH - HUD_X_PADDING * 2)
 
 struct glyphcb_state {
 	Color *color1, *color2;
@@ -1821,6 +1842,244 @@ void stage_draw_hud(void) {
 			.sprite = "boss_indicator",
 			.shader = "sprite_default",
 			.pos = { VIEWPORT_X+creal(global.boss->pos), 590 },
+			.color = RGBA(1 - red, 1 - red, 1 - red, 1 - red),
+		});
+	}
+
+	// Demo indicator
+	if(stage_is_demo_mode()) {
+		cmplxf pos = CMPLXF(
+			VIEWPORT_X + VIEWPORT_W * 0.5f,
+			VIEWPORT_Y + VIEWPORT_H * 0.5f - 75
+		);
+
+		float bg_width = 250;
+		float bg_height = 60;
+
+		Sprite *bg = res_sprite("part/smoke");
+
+		SpriteParams sp = {
+			.sprite_ptr = bg,
+			.shader_ptr = res_shader("sprite_default"),
+			.color = RGBA(0.1, 0.1, 0.2, 0.07),
+		};
+
+		r_mat_mv_push();
+		r_mat_mv_translate(crealf(pos), cimagf(pos), 0);
+		r_mat_mv_scale(bg_width / bg->w, bg_height / bg->h, 1);
+
+		r_mat_mv_push();
+		r_mat_mv_rotate(global.frames * 0.5 * DEG2RAD, 0, 0, 1);
+		r_draw_sprite(&sp);
+		r_mat_mv_pop();
+
+		sp.color = RGBA(0.2, 0.1, 0.1, 0.07);
+
+		r_mat_mv_push();
+		r_mat_mv_rotate(global.frames * -0.93 * DEG2RAD, 0, 0, 1);
+		r_draw_sprite(&sp);
+		r_mat_mv_pop();
+
+		r_mat_mv_pop();
+
+		text_draw("Demo", &(TextParams) {
+			.align = ALIGN_CENTER,
+			.font = "big",
+			.shader = "text_demo",
+			.shader_params = &(ShaderCustomParams) { global.frames / 60.0f },
+			.pos.as_cmplx = pos,
+		});
+	}
+
+
+
+
+
+
+	if (!global.second_player) {
+		return;
+	}
+
+
+
+
+
+	// SECOND PLAYER HUD COMPS
+
+	r_mat_mv_push();
+	r_mat_mv_translate(HUD_2_X_OFFSET + HUD_X_PADDING, 0, 0);
+
+	// Set up Extra Spell indicator opacity early; some other elements depend on it
+	extraspell_alpha = 0;
+	extraspell_fadein = 1;
+
+	if(global.boss && global.boss->current && global.boss->current->type == AT_ExtraSpell) {
+		extraspell_fadein  = fmin(1, -fmin(0, global.frames - global.boss->current->starttime) / (float)ATTACK_START_DELAY);
+
+		float fadeout;
+
+		if(attack_has_finished(global.boss->current)) {
+			fadeout = (1 - (global.boss->current->endtime - global.frames) / (float)ATTACK_END_DELAY_EXTRA) / 0.74;
+		} else {
+			fadeout = 0;
+		}
+
+		float fade = fmax(extraspell_fadein, fadeout);
+		extraspell_alpha = 1 - fade;
+	}
+
+	labels.lb_baseclr.r = 1 - extraspell_alpha;
+	labels.lb_baseclr.g = 1 - extraspell_alpha;
+	labels.lb_baseclr.b = 1 - extraspell_alpha;
+	labels.lb_baseclr.a = 1 - extraspell_alpha * 0.5;
+
+	// Lives and Bombs
+	if(global.stage->type != STAGE_SPELL) {
+		r_mat_mv_push();
+		r_mat_mv_translate(0, font_get_descent(res_font("standard")), 0);
+
+		Sprite *spr_life = res_sprite("hud/heart");
+		Sprite *spr_bomb = res_sprite("hud/star");
+
+		float spacing = 1;
+		float pos_lives = HUD_EFFECTIVE_WIDTH - spr_life->w * (PLR_MAX_LIVES - 0.5) - spacing * (PLR_MAX_LIVES - 1);
+		float pos_bombs = HUD_EFFECTIVE_WIDTH - spr_bomb->w * (PLR_MAX_BOMBS - 0.5) - spacing * (PLR_MAX_BOMBS - 1);
+
+		labels.y_ofs.lives_display = 0 /* spr_life->h * -0.25 */;
+		labels.y_ofs.bombs_display = 0 /* spr_bomb->h * -0.25 */;
+
+		labels.y_ofs.lives_text = labels.y_ofs.lives_display + spr_life->h;
+		labels.y_ofs.bombs_text = labels.y_ofs.bombs_display + spr_bomb->h;
+
+		labels.x.next_life = pos_lives - spr_life->w * 0.5;
+		labels.x.next_bomb = pos_bombs - spr_bomb->w * 0.5;
+
+		draw_fragments(&(DrawFragmentsParams) {
+			.fill = spr_life,
+			.pos = { pos_lives, labels.y.lives + labels.y_ofs.lives_display },
+			.origin_offset = { 0, 0 },
+			.limits = { PLR_MAX_LIVES, PLR_MAX_LIFE_FRAGMENTS },
+			.filled = { global.plr.lives, global.plr.life_fragments },
+			.alpha = 1,
+			.spacing = spacing,
+			.color = {
+				.fill = color_mul(RGBA(1, 1, 1, 1), &labels.lb_baseclr),
+				.back = RGBA(0, 0, 0, 0.5),
+				.frag = RGBA(0.5, 0.5, 0.6, 0.5),
+			}
+		});
+
+		draw_fragments(&(DrawFragmentsParams) {
+			.fill = spr_bomb,
+			.pos = { pos_bombs, labels.y.bombs + labels.y_ofs.bombs_display },
+			.origin_offset = { 0, 0.05 },
+			.limits = { PLR_MAX_BOMBS, PLR_MAX_BOMB_FRAGMENTS },
+			.filled = { global.plr.bombs, global.plr.bomb_fragments },
+			.alpha = 1,
+			.spacing = spacing,
+			.color = {
+				.fill = color_mul(RGBA(1, 1, 1, 1), &labels.lb_baseclr),
+				.back = color_mul(RGBA(0, 0, 0, 0.5), &labels.lb_baseclr),
+				.frag = color_mul(RGBA(0.5, 0.5, 0.6, 0.5), &labels.lb_baseclr),
+			}
+		});
+
+		r_mat_mv_pop();
+	}
+
+	// Difficulty indicator
+	r_draw_sprite(&(SpriteParams) {
+		.sprite = difficulty_sprite_name(global.diff),
+		.pos = { HUD_2_EFFECTIVE_WIDTH * 0.5, 400 },
+		.scale.both = 0.6,
+		.shader = "sprite_default",
+	});
+
+	// Power/Item/Voltage icons
+	r_mat_mv_push();
+	r_mat_mv_translate(HUD_X_SECONDARY_OFS_ICON, font_get_descent(res_font("standard")) * 0.5 - 1, 0);
+
+	r_draw_sprite(&(SpriteParams) {
+		.pos = { 2, labels.y.power + 2 },
+		.sprite = "item/power",
+		.shader = "sprite_default",
+		.color = RGBA(0, 0, 0, 0.5),
+	});
+
+	r_draw_sprite(&(SpriteParams) {
+		.pos = { 0, labels.y.power },
+		.sprite = "item/power",
+		.shader = "sprite_default",
+	});
+
+	r_draw_sprite(&(SpriteParams) {
+		.pos = { 2, labels.y.value + 2 },
+		.sprite = "item/point",
+		.shader = "sprite_default",
+		.color = RGBA(0, 0, 0, 0.5),
+	});
+
+	r_draw_sprite(&(SpriteParams) {
+		.pos = { 0, labels.y.value },
+		.sprite = "item/point",
+		.shader = "sprite_default",
+	});
+
+	r_draw_sprite(&(SpriteParams) {
+		.pos = { 2, labels.y.voltage + 2 },
+		.sprite = "item/voltage",
+		.shader = "sprite_default",
+		.color = RGBA(0, 0, 0, 0.5),
+	});
+
+	r_draw_sprite(&(SpriteParams) {
+		.pos = { 0, labels.y.voltage },
+		.sprite = "item/voltage",
+		.shader = "sprite_default",
+	});
+
+	r_mat_mv_pop();
+	stage_draw_hud_text(&labels);
+
+	// Extra Spell indicator
+	if(extraspell_alpha > 0) {
+		float s2 = fmax(0, swing(extraspell_alpha, 3));
+		r_state_push();
+		r_shader("text_default");
+		r_mat_mv_push();
+		r_mat_mv_translate(lerp(-HUD_X_OFFSET - HUD_X_PADDING, HUD_2_EFFECTIVE_WIDTH * 0.5, pow(2*extraspell_fadein-1, 2)), 128, 0);
+		r_mat_mv_rotate((360 * (1-s2) - 25) * DEG2RAD, 0, 0, 1);
+		r_mat_mv_scale(s2, s2, 0);
+		r_color(RGBA_MUL_ALPHA(0.3, 0.6, 0.7, 0.7 * extraspell_alpha));
+
+		Font *font = res_font("big");
+
+		// TODO: replace this with a shader
+		text_draw("Voltage        \n    Overdrive!", &(TextParams) { .pos = {  1,  1 }, .font_ptr = font, .align = ALIGN_CENTER });
+		text_draw("Voltage        \n    Overdrive!", &(TextParams) { .pos = { -1, -1 }, .font_ptr = font, .align = ALIGN_CENTER });
+		r_color4(extraspell_alpha, extraspell_alpha, extraspell_alpha, extraspell_alpha);
+		text_draw("Voltage        \n    Overdrive!", &(TextParams) { .pos = {  0,  0 }, .font_ptr = font, .align = ALIGN_CENTER });
+
+		r_mat_mv_pop();
+		r_state_pop();
+	}
+
+	if(stagedraw.framerate_graphs) {
+		stage_draw_framerate_graphs(0, 360, HUD_2_EFFECTIVE_WIDTH, 30);
+	}
+
+	r_mat_mv_pop();
+
+	// Boss indicator ("Enemy")
+	if(global.boss) {
+		float red = 0.5*exp(-0.5*(global.frames-global.boss->lastdamageframe)); // hit indicator
+		if(red > 1)
+			red = 0;
+
+		r_draw_sprite(&(SpriteParams) {
+			.sprite = "boss_indicator",
+			.shader = "sprite_default",
+			.pos = { VIEWPORT_X + SCREEN_W + creal(global.boss->pos), 590 },
 			.color = RGBA(1 - red, 1 - red, 1 - red, 1 - red),
 		});
 	}

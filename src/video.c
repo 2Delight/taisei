@@ -616,79 +616,78 @@ bool video_is_resizable(void) {
 bool video_is_fullscreen(void) {
 	return SDL_GetWindowFlags(video.window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
 }
-
 static void video_init_sdl(void) {
-	// XXX: workaround for an SDL bug: https://bugzilla.libsdl.org/show_bug.cgi?id=4127
-	SDL_SetHintWithPriority(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0", SDL_HINT_OVERRIDE);
+  // XXX: workaround for an SDL bug: https://bugzilla.libsdl.org/show_bug.cgi?id=4127
+  SDL_SetHintWithPriority(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0", SDL_HINT_OVERRIDE);
 
-	uint num_drivers = SDL_GetNumVideoDrivers();
-	const char *video_drivers[num_drivers];
+  uint num_drivers = SDL_GetNumVideoDrivers();
+  const char *video_drivers[num_drivers];
 
-	void *buf;
-	SDL_RWops *out = SDL_RWAutoBuffer(&buf, 256);
+  void *buf;
+  SDL_RWops *out = SDL_RWAutoBuffer(&buf, 256);
 
-	SDL_RWprintf(out, "Available video drivers:");
+  SDL_RWprintf(out, "Available video drivers:");
 
-	for(uint i = 0; i < num_drivers; ++i) {
-		video_drivers[i] = SDL_GetVideoDriver(i);
-		SDL_RWprintf(out, " %s", video_drivers[i]);
-	}
+  for(uint i = 0; i < num_drivers; ++i) {
+    video_drivers[i] = SDL_GetVideoDriver(i);
+    SDL_RWprintf(out, " %s", video_drivers[i]);
+  }
 
-	SDL_WriteU8(out, 0);
-	log_info("%s", (char*)buf);
-	SDL_RWclose(out);
+  SDL_WriteU8(out, 0);
+  log_info("%s", (char*)buf);
+  SDL_RWclose(out);
 
-	// https://bugzilla.libsdl.org/show_bug.cgi?id=3948
-	// A suboptimal X11 server may be available on top of those systems,
-	// so we push X11 down in the priority list.
-	const char *prefer_drivers = env_get_string_nonempty("TAISEI_PREFER_SDL_VIDEODRIVERS", "wayland,cocoa,windows,x11");
-	const char *force_driver = env_get_string_nonempty("TAISEI_VIDEO_DRIVER", NULL);
+  // https://bugzilla.libsdl.org/show_bug.cgi?id=3948
+  // A suboptimal X11 server may be available on top of those systems,
+  // so we push X11 down in the priority list.
+  const char *prefer_drivers = env_get_string_nonempty("TAISEI_PREFER_SDL_VIDEODRIVERS", "wayland,cocoa,windows,x11");
+  const char *force_driver = env_get_string_nonempty("FORCE_TAISEI_VIDEODRIVER", "DEFAULT_SDL_VIDEODRIVER");
 
-	if(force_driver) {
-		log_warn("TAISEI_VIDEO_DRIVER is deprecated and will be removed, use TAISEI_PREFER_SDL_VIDEODRIVERS or SDL_VIDEODRIVER instead");
-	} else {
-		force_driver = env_get_string_nonempty("SDL_VIDEODRIVER", NULL);
-	}
+  if(force_driver) {
+    log_warn("FORCE_TAISEI_VIDEODRIVER is deprecated and will be removed, use TAISEI_PREFER_SDL_VIDEODRIVERS or SDL_VIDEODRIVER instead");
+  } else {
+    force_driver = env_get_string_nonempty("SDL_VIDEODRIVER", NULL);
+  }
 
-	if(prefer_drivers && *prefer_drivers && !force_driver) {
-		char buf[strlen(prefer_drivers) + 1];
-		char *driver, *bufptr = buf;
-		int drivernum = 0;
-		strcpy(buf, prefer_drivers);
+  if(prefer_drivers && *prefer_drivers && !force_driver) {
+    char buf[strlen(prefer_drivers) + 1];
+    char *driver, *bufptr = buf;
+    int drivernum = 0;
+    strcpy(buf, prefer_drivers);
 
-		while((driver = strtok_r(NULL, " :;,", &bufptr))) {
-			bool skip = true;
+    while((driver = strtok_r(NULL, " :;,", &bufptr))) {
+      bool skip = true;
 
-			for(uint i = 0; i < num_drivers; ++i) {
-				if(!strcmp(video_drivers[i], driver)) {
-					skip = false;
-					break;
-				}
-			}
+      for(uint i = 0; i < num_drivers; ++i) {
+        if(!strcmp(video_drivers[i], driver)) {
+          skip = false;
+          break;
+        }
+      }
 
-			++drivernum;
+      ++drivernum;
 
-			if(skip) {
-				continue;
-			}
+      if(skip) {
+        continue;
+      }
 
-			log_info("Trying preferred driver #%i: %s", drivernum, driver);
+      log_info("Trying preferred driver #%i: %s", drivernum, driver);
 
-			if(SDL_VideoInit(driver)) {
-				log_info("Driver '%s' failed: %s", driver, SDL_GetError());
-			} else {
-				return;
-			}
-		}
+      if(SDL_VideoInit(driver)) {
+        log_info("Driver '%s' failed: %s", driver, SDL_GetError());
+      } else {
+        return;
+      }
+    }
 
-		if(drivernum) {
-			log_info("All preferred drivers failed, falling back to SDL default");
-		}
-	}
+    if(drivernum) {
+      log_info("All preferred drivers failed, falling back to SDL default");
+    }
+  }
 
-	if(SDL_VideoInit(force_driver)) {
-		log_fatal("SDL_VideoInit() failed: %s", SDL_GetError());
-	}
+  if(SDL_VideoInit(force_driver)) {
+    log_fatal("SDL_VideoInit() failed: %s", SDL_GetError());
+  }
 }
 
 static void video_handle_resize(int w, int h) {
