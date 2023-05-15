@@ -46,10 +46,10 @@ ReplayStage *replay_stage_new(Replay *rpy, StageInfo *stage, uint64_t start_time
 	return s;
 }
 
-void replay_stage_sync_player_state(ReplayStage *stg, Player *plr) {
+void replay_stage_sync_player_state(ReplayStage *stg, Player *plr, PlayerMode * mode) {
 	plr->points = stg->plr_points;
 	plr->stats.total.continues_used = stg->plr_continues_used;
-	plr->mode = plrmode_find(stg->plr_char, stg->plr_shot);
+	plr->mode = mode;
 	plr->pos = stg->plr_pos_x + I * stg->plr_pos_y;
 	// plr->focus = stg->plr_focus;  FIXME remove and bump version
 	plr->lives = stg->plr_lives;

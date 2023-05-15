@@ -26,7 +26,7 @@ ReplayStage *replay_stage_new(
 void replay_stage_event(ReplayStage *stg, uint32_t frame, uint8_t type, uint16_t value)
 	attr_nonnull_all;
 
-void replay_stage_sync_player_state(ReplayStage *stg, Player *plr)
+void replay_stage_sync_player_state(ReplayStage *stg, Player *plr, PlayerMode *mode)
 	attr_nonnull_all;
 
 void replay_stage_destroy_events(ReplayStage *stg)
